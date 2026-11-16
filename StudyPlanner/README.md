@@ -11,8 +11,7 @@
 ## Cài đặt và chạy
 
 ```bash
-git clone https://github.com/LaiVanThanh/1923050251_1923050209_1923050707_Topic1.git
-cd 1923050251_1923050209_1923050707_Topic1
+
 npm install
 npx expo install --fix
 ```
@@ -35,8 +34,7 @@ Có thể chạy giao diện web bằng `npm run web`. Một số chức năng p
 
 Ứng dụng kết nối tới REST API từ xa với hai tài nguyên `/courses` và `/assignments`:
 - Tệp `.env` và hằng số `DEFAULT_API_BASE_URL` trong `src/services/studyApi.ts` đã được cấu hình sẵn trỏ tới máy chủ REST API:
-  ```env
-  EXPO_PUBLIC_API_BASE_URL=https://my-json-server.typicode.com/LaiVanThanh/1923050251_1923050209_1923050707_Topic1
+ 
   ```
 - Khi có mạng, mọi thao tác tải danh sách và tạo/sửa/xóa (`GET`, `POST`, `PUT`, `DELETE`) đều được gửi trực tiếp lên máy chủ REST API.
 - Khi ngoại tuyến, thao tác tạo/sửa/xóa được lưu vào `AsyncStorage` và xếp vào hàng đợi `study_planner_mutation_queue_v1`. Ngay khi mạng kết nối trở lại, hàm `syncWhenBackOnline()` và `flushOfflineMutationQueue()` tự động gửi toàn bộ thay đổi trong hàng đợi lên máy chủ từ xa.
