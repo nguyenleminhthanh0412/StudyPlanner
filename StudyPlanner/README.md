@@ -14,7 +14,7 @@
 
 npm install
 npx expo install --fix
-```
+
 
 Chạy ứng dụng trên Android đã kết nối hoặc giả lập Android:
 
