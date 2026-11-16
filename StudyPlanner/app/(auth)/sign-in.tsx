@@ -1,0 +1,359 @@
+/**
+ * Màn hình Đăng nhập app/(auth)/sign-in.tsx
+ * Phong cách tối giản Google Tasks, không dùng icon, không dùng ngoặc đơn.
+ */
+
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { AccessibleButton } from '../../src/components/AccessibleButton';
+import { ScreenStateView } from '../../src/components/ScreenStateView';
+import {
+  useAuthError,
+  useAuthStore,
+  useAuthSubmitting,
+} from '../../src/store/useAuthStore';
+import { MIN_TOUCH_TARGET, useAppTheme } from '../../src/theme/tokens';
+
+const QUICK_ACCOUNTS = [
+  {
+    code: 'SV001',
+    name: 'Nguyễn Văn A',
+    email: 'sinhvien01@example.edu.vn',
+  },
+  {
+    code: 'SV002',
+    name: 'Trần Thị B',
+    email: 'sinhvien02@example.edu.vn',
+  },
+  {
+    code: 'SV003',
+    name: 'Lê Văn C',
+    email: 'sinhvien03@example.edu.vn',
+  },
+];
+
+export default function SignInScreen() {
+  const router = useRouter();
+  const { colors, typography, spacing, radius, isDark, toggleTheme } = useAppTheme();
+
+  const signIn = useAuthStore((s) => s.signIn);
+  const clearAuthError = useAuthStore((s) => s.clearAuthError);
+  const isSubmitting = useAuthSubmitting();
+  const authError = useAuthError();
+
+  const [email, setEmail] = useState('sinhvien01@example.edu.vn');
+  const [password, setPassword] = useState('123456');
+  const [studentName, setStudentName] = useState('Nguyễn Văn A');
+  const [showEmptyGuide, setShowEmptyGuide] = useState(false);
+
+  const handleSignIn = async () => {
+    const ok = await signIn({ email, password, studentName });
+    if (ok) {
+      router.replace('/(tabs)');
+    }
+  };
+
+  return (
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.backgroundPrimary }]}
+    >
+      <KeyboardAvoidingView
+        style={styles.flexOne}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingHorizontal: spacing.xl, paddingVertical: spacing.xl },
+          ]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.topBar}>
+            <View
+              style={[
+                styles.universityBadge,
+                {
+                  backgroundColor: colors.primarySoft,
+                  borderRadius: radius.pill,
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: spacing.xs + 2,
+                },
+              ]}
+            >
+              <Text style={[typography.captionSemibold, { color: colors.primary }]}>
+                Cổng thông tin sinh viên
+              </Text>
+            </View>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Chuyển đổi giao diện Sáng hoặc Tối"
+              onPress={toggleTheme}
+              style={[
+                styles.themeButton,
+                {
+                  minHeight: MIN_TOUCH_TARGET,
+                  minWidth: MIN_TOUCH_TARGET,
+                  backgroundColor: colors.backgroundSecondary,
+                  borderRadius: radius.md,
+                  paddingHorizontal: spacing.md,
+                },
+              ]}
+            >
+              <Text style={[typography.footnoteSemibold, { color: colors.textPrimary }]}>
+                {isDark ? 'Sáng' : 'Tối'}
+              </Text>
+            </Pressable>
+          </View>
+
+          <View style={{ marginTop: spacing.xl, marginBottom: spacing.xl }}>
+            <Text style={[typography.title1, { color: colors.textPrimary }]}>
+              Đăng nhập Study Planner
+            </Text>
+            <Text
+              style={[
+                typography.subheadline,
+                { color: colors.textSecondary, marginTop: spacing.sm },
+              ]}
+            >
+              Nhập email sinh viên và mật khẩu. Phiên làm việc được mã hóa trong Expo SecureStore
+              và tự động duy trì ngay cả khi đóng hẳn ứng dụng.
+            </Text>
+          </View>
+
+          <ScreenStateView
+            isLoading={isSubmitting}
+            loadingLabel="Đang xác thực và lưu phiên bảo mật vào Expo SecureStore..."
+            isError={Boolean(authError)}
+            errorTitle="Xác thực không thành công"
+            errorMessage={authError ?? undefined}
+            onRetry={() => {
+              clearAuthError();
+              if (password === 'error500') {
+                setPassword('123456');
+              }
+            }}
+            isEmpty={showEmptyGuide}
+            emptyTitle="Chưa có thông tin tài khoản"
+            emptyMessage="Chọn một trong 3 mã số sinh viên mẫu để tự động điền thông tin đăng nhập."
+            emptyActionLabel="Điền tài khoản mẫu"
+            onEmptyAction={() => {
+              setEmail('sinhvien01@example.edu.vn');
+              setPassword('123456');
+              setStudentName('Nguyễn Văn A');
+              setShowEmptyGuide(false);
+            }}
+          >
+            <View style={{ marginBottom: spacing.lg }}>
+              <Text
+                style={[
+                  typography.footnoteSemibold,
+                  { color: colors.textSecondary, marginBottom: spacing.sm },
+                ]}
+              >
+                TÀI KHOẢN MẪU:
+              </Text>
+              <View style={styles.quickAccountsRow}>
+                {QUICK_ACCOUNTS.map((acc) => {
+                  const selected = email.toLowerCase() === acc.email.toLowerCase();
+                  return (
+                    <Pressable
+                      key={acc.code}
+                      testID={`quick-account-${acc.code}`}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Chọn tài khoản sinh viên ${acc.code}`}
+                      onPress={() => {
+                        clearAuthError();
+                        setEmail(acc.email);
+                        setPassword('123456');
+                        setStudentName(acc.name);
+                      }}
+                      style={[
+                        styles.accountChip,
+                        {
+                          minHeight: MIN_TOUCH_TARGET,
+                          backgroundColor: selected
+                            ? colors.primarySoft
+                            : colors.backgroundSecondary,
+                          borderColor: selected ? colors.primary : colors.borderSubtle,
+                          borderRadius: radius.md,
+                          paddingHorizontal: spacing.md,
+                          paddingVertical: spacing.xs,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          typography.footnoteSemibold,
+                          { color: selected ? colors.primary : colors.textPrimary },
+                        ]}
+                      >
+                        {acc.code}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={{ marginBottom: spacing.md }}>
+              <Text
+                style={[
+                  typography.subheadlineSemibold,
+                  { color: colors.textPrimary, marginBottom: spacing.xs },
+                ]}
+              >
+                Email sinh viên
+              </Text>
+              <TextInput
+                testID="signin-email-input"
+                accessibilityLabel="Email sinh viên"
+                value={email}
+                onChangeText={(val) => {
+                  if (authError) clearAuthError();
+                  setEmail(val);
+                }}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                placeholder="sinhvien@example.edu.vn"
+                placeholderTextColor={colors.textTertiary}
+                style={[
+                  typography.body,
+                  styles.figmaField,
+                  {
+                    backgroundColor: colors.backgroundSecondary,
+                    borderColor: colors.borderSubtle,
+                    borderRadius: radius.md,
+                    color: colors.textPrimary,
+                    paddingHorizontal: spacing.lg,
+                  },
+                ]}
+              />
+            </View>
+
+            <View style={{ marginBottom: spacing.md }}>
+              <Text
+                style={[
+                  typography.subheadlineSemibold,
+                  { color: colors.textPrimary, marginBottom: spacing.xs },
+                ]}
+              >
+                Họ tên sinh viên
+              </Text>
+              <TextInput
+                testID="signin-name-input"
+                accessibilityLabel="Họ tên và mã số sinh viên"
+                value={studentName}
+                onChangeText={setStudentName}
+                placeholder="Nhập họ tên sinh viên"
+                placeholderTextColor={colors.textTertiary}
+                style={[
+                  typography.body,
+                  styles.figmaField,
+                  {
+                    backgroundColor: colors.backgroundSecondary,
+                    borderColor: colors.borderSubtle,
+                    borderRadius: radius.md,
+                    color: colors.textPrimary,
+                    paddingHorizontal: spacing.lg,
+                  },
+                ]}
+              />
+            </View>
+
+            <View style={{ marginBottom: spacing.xl }}>
+              <Text
+                style={[
+                  typography.subheadlineSemibold,
+                  { color: colors.textPrimary, marginBottom: spacing.xs },
+                ]}
+              >
+                Mật khẩu tối thiểu 6 ký tự
+              </Text>
+              <TextInput
+                testID="signin-password-input"
+                accessibilityLabel="Mật khẩu đăng nhập"
+                value={password}
+                onChangeText={(val) => {
+                  if (authError) clearAuthError();
+                  setPassword(val);
+                }}
+                secureTextEntry
+                placeholder="••••••••"
+                placeholderTextColor={colors.textTertiary}
+                style={[
+                  typography.body,
+                  styles.figmaField,
+                  {
+                    backgroundColor: colors.backgroundSecondary,
+                    borderColor: colors.borderSubtle,
+                    borderRadius: radius.md,
+                    color: colors.textPrimary,
+                    paddingHorizontal: spacing.lg,
+                  },
+                ]}
+              />
+            </View>
+
+            <AccessibleButton
+              testID="signin-submit-button"
+              label="Đăng nhập vào Study Planner"
+              accessibilityLabel="Đăng nhập vào Study Planner"
+              onPress={handleSignIn}
+              style={{ minHeight: 52, borderRadius: radius.pill }}
+            />
+          </ScreenStateView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  flexOne: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  universityBadge: {
+    alignSelf: 'flex-start',
+  },
+  themeButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickAccountsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  accountChip: {
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  figmaField: {
+    height: 52,
+    borderWidth: 1,
+  },
+});
